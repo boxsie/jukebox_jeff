@@ -1,4 +1,4 @@
-name: BotData - Build and Deploy to GKE
+name: Build and Deploy to GKE
 
 on: workflow_dispatch
 
@@ -6,18 +6,14 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: devcluster
   GKE_ZONE: europe-west1-b
-  DEPLOYMENT_NAME: bot-data-deployment
+  DEPLOYMENT_NAME: jukebox-jeff-deployment
   NAMESPACE: discord
-  IMAGE: discord-bot/bot-data
+  IMAGE: discord-bot/jukebox-jeff
 
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./BotDataStore
 
     steps:
     - name: Checkout
@@ -64,11 +60,8 @@ jobs:
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
       run: |-
-        ./kustomize edit add secret bot-data-db-url --from-literal=db-url=${{ secrets.DB_URL }}
-        ./kustomize edit add secret bot-data-db-name --from-literal=db-name=${{ secrets.DB_NAME }}
-        ./kustomize edit add secret bot-data-db-user --from-literal=db-user=${{ secrets.DB_USER }}
-        ./kustomize edit add secret bot-data-db-pass --from-literal=db-pass=${{ secrets.DB_PASS }}
-        ./kustomize edit set image discord-bot/bot-data=eu.gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
+        ./kustomize edit add secret jukebox-jeff --from-literal=discord-token=${{ secrets.DISCORD_TOKEN }}
+        ./kustomize edit set image discord-bot/jukebox-jeff=eu.gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
         ./kustomize build . | kubectl apply -f -
         kubectl rollout status -n $NAMESPACE deployment/$DEPLOYMENT_NAME
         kubectl get services -o wide
