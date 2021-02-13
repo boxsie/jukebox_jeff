@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: jukebox-jeff
+  name: jukebox-jeff-deployment
+  namespace: discord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jukebox-jeff
+  template:
+    metadata:
+      labels:
+        app: jukebox-jeff
+    spec:
+      containers:
+      - env:
+        - name: DISCORD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: discord-token
+              name: jukebox-jeff
+        image: discord-bot/jukebox-jeff:latest
+        name: jukebox-jeff
+        args: ["-discord_token", "$(DISCORD_TOKEN)"]
+        ports:
+        - containerPort: 8765
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jukebox-jeff
+  name: jukebox-jeff-service
+  namespace: discord
+spec:
+  ports:
+  - port: 8765
+    targetPort: 8765
+  selector:
+    app: jukebox-jeff
